@@ -63,7 +63,8 @@ steps_log = 0 #  holds total steps to check for steps per hour
 steps_remaining = 0 #  holds the remaining steps needed to reach the step goal
 sph = 0 #  holds steps per hour
 reset_pending = False
-brightness_pending = False
+brightness_pending = True
+brightness_mono = time.monotonic()
 
 # Display content
 splash = displayio.Group()
@@ -169,6 +170,7 @@ while True:
         text_steps.text = '%d Done' % steps
         prog_bar.progress = float(countdown*100)
     if btn.value is False and reset_pending is False:
+        display.wake()
         display.brightness = 1
         brightness_pending = True
         reset_mono = time.monotonic()
@@ -177,5 +179,8 @@ while True:
         reset_pending = True
     if brightness_pending is True and (int(time.monotonic() - brightness_mono) > 5):
         display.brightness = 0.01
+    if brightness_pending is True and (int(time.monotonic() - brightness_mono) > 10):
+        display.sleep()
+        brightness_pending = False
 
     time.sleep(0.001)
