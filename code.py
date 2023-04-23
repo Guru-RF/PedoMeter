@@ -1,3 +1,4 @@
+import alarm
 import time
 import board
 import busio
@@ -15,7 +16,10 @@ from rfguru_lsm6ds import Rate,AccelRange
 from rfguru_lsm6ds.lsm6dsltr import LSM6DSLTR as LSM6DS
 
 #### TODO
-### safe steps and stats in memory (on/off battery safe)
+# safe steps and stats in memory (to safe battery and keep steps when powered off)
+
+print("Waking up")
+pin_alarm = alarm.pin.PinAlarm(pin=board.GP15, value=False, pull=True)
 
 # release displays
 displayio.release_displays()
@@ -128,7 +132,6 @@ while True:
             mono = time.monotonic()
 
         #  adjusting countdown to step goal
-        print(countdown)
         prog_bar.progress = float(countdown*100)
 
     #  displaying countdown to step goal
@@ -182,5 +185,9 @@ while True:
     if brightness_pending is True and (int(time.monotonic() - brightness_mono) > 10):
         display.sleep()
         brightness_pending = False
+        alarm.light_sleep_until_alarms(pin_alarm)
+        btn = DigitalInOut(board.GP15)
+        btn.direction = Direction.INPUT
+        btn.pull = Pull.UP       
 
     time.sleep(0.001)
