@@ -4,6 +4,7 @@ import board
 import busio
 import simpleio
 import terminalio
+import digitalio
 import displayio
 import adafruit_displayio_ssd1306
 from simpleio import map_range
@@ -28,6 +29,11 @@ displayio.release_displays()
 btn = DigitalInOut(board.GP15)
 btn.direction = Direction.INPUT
 btn.pull = Pull.UP
+
+# Display power
+displayPWR = digitalio.DigitalInOut(board.GP11)
+displayPWR.direction = digitalio.Direction.OUTPUT
+displayPWR.value = True
 
 # Create the I2C interface for the sensor
 i2c = busio.I2C(scl=board.GP19, sda=board.GP18)
@@ -185,7 +191,15 @@ while True:
     if brightness_pending is True and (int(time.monotonic() - brightness_mono) > 10):
         display.sleep()
         brightness_pending = False
+	displayio.release_displays()
+	displayPWR.value = False
         alarm.light_sleep_until_alarms(pin_alarm)
+	displayPWR.value = True
+	time.sleep(1)
+	display_bus = displayio.I2CDisplay(i2c2, device_address=60)
+	display = adafruit_displayio_ssd1306.SSD1306(display_bus, width=128, height=64)
+	display.brightness = 0.01
+	display.show(splash)
         btn = DigitalInOut(board.GP15)
         btn.direction = Direction.INPUT
         btn.pull = Pull.UP       
