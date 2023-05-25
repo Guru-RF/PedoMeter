@@ -190,15 +190,16 @@ while True:
         display.brightness = 0.01
     if brightness_pending is True and (int(time.monotonic() - brightness_mono) > 10):
         display.sleep()
-        brightness_pending = False
 	displayio.release_displays()
 	displayPWR.value = False
         alarm.light_sleep_until_alarms(pin_alarm)
+        brightness_pending = True
+        brightness_mono = time.monotonic()
 	displayPWR.value = True
 	time.sleep(1)
 	display_bus = displayio.I2CDisplay(i2c2, device_address=60)
 	display = adafruit_displayio_ssd1306.SSD1306(display_bus, width=128, height=64)
-	display.brightness = 0.01
+	display.brightness = 1
 	display.show(splash)
         btn = DigitalInOut(board.GP15)
         btn.direction = Direction.INPUT
