@@ -18,7 +18,7 @@ from rfguru_lsm6ds import Rate,AccelRange
 from rfguru_lsm6ds.lsm6dsltr import LSM6DSLTR as LSM6DS
 
 #### TODO
-# safe steps and stats in memory (to safe battery and keep steps when powered off)
+# safe steps and stats in memory when there were no steps in the last 5 mins (deep sleep)
 
 print("Waking up")
 pin_alarm = alarm.pin.PinAlarm(pin=board.GP15, value=False, pull=True)
@@ -112,6 +112,8 @@ splash.append(text_sph)
 splash.append(steps_countdown)
 splash.append(text_steps)
 
+start_time=time.monotonic()
+
 while True:
     voltage = get_voltage(analog_bat)
     if (voltage <= 2.6):
@@ -126,8 +128,7 @@ while True:
 	displayio.release_displays()
 	displayPWR.value = False
 	alarm.exit_and_deep_sleep_until_alarms(pin_alarm)
-    else:
-	print(voltage)
+    #print(voltage)
 	
     #  setting up steps to hold step count
     steps = sensor.pedometer_steps
@@ -216,7 +217,12 @@ while True:
         display.sleep()
 	displayio.release_displays()
 	displayPWR.value = False
-        alarm.light_sleep_until_alarms(pin_alarm)
+	time_alarm = alarm.time.TimeAlarm(monotonic_time=time.monotonic() + 300)
+	if (steps == 0):
+		alarm.exit_and_deep_sleep_until_alarms(time_alarm, pin_alarm)
+	else:
+		alarm.light_sleep_until_alarms(time_alarm, pin_alarm)
+
         brightness_pending = True
         brightness_mono = time.monotonic()
 	displayPWR.value = True
