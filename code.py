@@ -6,6 +6,7 @@ import simpleio
 import terminalio
 import digitalio
 import displayio
+from analogio import AnalogIn
 import adafruit_displayio_ssd1306
 from simpleio import map_range
 from adafruit_bitmap_font import bitmap_font
@@ -34,6 +35,13 @@ btn.pull = Pull.UP
 displayPWR = digitalio.DigitalInOut(board.GP11)
 displayPWR.direction = digitalio.Direction.OUTPUT
 displayPWR.value = True
+
+# Battery Analog
+analog_bat = AnalogIn(board.GP27)
+
+# Voltage Func
+def get_voltage(pin):
+    return ((pin.value * 3.3) / 65536)*2
 
 # Create the I2C interface for the sensor
 i2c = busio.I2C(scl=board.GP19, sda=board.GP18)
@@ -105,6 +113,22 @@ splash.append(steps_countdown)
 splash.append(text_steps)
 
 while True:
+    voltage = get_voltage(analog_bat)
+    if (voltage <= 2.6):
+        prog_bar.progress = 100
+        steps_countdown.text = ''
+        text_sph.text = ''
+        text_steps.text = 'Battery LOW !!!'
+	time.sleep(2)
+        text_steps.text = 'Shutting DOWN !!!'
+	time.sleep(2)
+        display.sleep()
+	displayio.release_displays()
+	displayPWR.value = False
+	alarm.exit_and_deep_sleep_until_alarms(pin_alarm)
+    else:
+	print(voltage)
+	
     #  setting up steps to hold step count
     steps = sensor.pedometer_steps
 
